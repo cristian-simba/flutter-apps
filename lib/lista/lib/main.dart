@@ -1,7 +1,3 @@
-// Copyright 2020 The Chromium Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
 import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -12,6 +8,8 @@ import 'package:window_size/window_size.dart';
 import 'src/api/item.dart';
 import 'src/catalog.dart';
 import 'src/item_tile.dart';
+
+import '../../main.dart' as Principal;
 
 void main() {
   setupWindow();
@@ -48,6 +46,9 @@ class MyApp extends StatelessWidget {
         title: 'Infinite List Sample',
         theme: ThemeData.light(),
         home: const MyHomePage(),
+        routes: {
+          '/home': (context) => const Principal.MyApp()
+        },
       ),
     );
   }
@@ -62,31 +63,31 @@ class MyHomePage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Infinite List Sample'),
       ),
-      body: Selector<Catalog, int?>(
-        // Selector is a widget from package:provider. It allows us to listen
-        // to only one aspect of a provided value. In this case, we are only
-        // listening to the catalog's `itemCount`, because that's all we need
-        // at this level.
-        selector: (context, catalog) => catalog.itemCount,
-        builder: (context, itemCount, child) => ListView.builder(
-          // When `itemCount` is null, `ListView` assumes an infinite list.
-          // Once we provide a value, it will stop the scrolling beyond
-          // the last element.
-          itemCount: itemCount,
-          padding: const EdgeInsets.symmetric(vertical: 18),
-          itemBuilder: (context, index) {
-            // Every item of the `ListView` is individually listening
-            // to the catalog.
-            var catalog = Provider.of<Catalog>(context);
-
-            // Catalog provides a single synchronous method for getting the
-            // current data.
-            return switch (catalog.getByIndex(index)) {
-              Item(isLoading: true) => const LoadingItemTile(),
-              var item => ItemTile(item: item)
-            };
-          },
-        ),
+      body: Column(
+        children: [
+          Selector<Catalog, int?>(
+            selector: (context, catalog) => catalog.itemCount,
+            builder: (context, itemCount, child) => Expanded(
+              child: ListView.builder(
+                itemCount: itemCount,
+                padding: const EdgeInsets.symmetric(vertical: 18),
+                itemBuilder: (context, index) {
+                  var catalog = Provider.of<Catalog>(context);
+                  return switch (catalog.getByIndex(index)) {
+                    Item(isLoading: true) => const LoadingItemTile(),
+                    var item => ItemTile(item: item)
+                  };
+                },
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pushNamed(context, '/home');
+            },
+            child: const Text('Ir a la Página Principal'),
+          ),
+        ],
       ),
     );
   }
